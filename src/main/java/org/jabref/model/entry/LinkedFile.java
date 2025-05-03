@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -231,29 +230,53 @@ public class LinkedFile implements Serializable {
         return findIn(dirs);
     }
 
-    /// Tries to locate the file.
-    /// In case the path is absolute, the path is checked.
-    /// In case the path is relative, the given directories are used as base directories.
-    ///
-    /// @return absolute path if found.
+//    /// Tries to locate the file.
+//    /// In case the path is absolute, the path is checked.
+//    /// In case the path is relative, the given directories are used as base directories.
+//    ///
+//    /// @return absolute path if found.
+//    public Optional<Path> findIn(List<Path> directories) {
+//        try {
+//            if (link.get().isEmpty()) {
+//                // We do not want to match empty paths (which could be any file or none ?!)
+//                return Optional.empty();
+//            }
+//
+//            Path file = Path.of(link.get());
+//            if (file.isAbsolute() || directories.isEmpty()) {
+//                if (Files.exists(file)) {
+//                    return Optional.of(file);
+//                } else {
+//                    return Optional.empty();
+//                }
+//            } else {
+//                return FileUtil.find(link.get(), directories);
+//            }
+//        } catch (InvalidPathException ex) {
+//            return Optional.empty();
+//        }
+//    }
+
+    /**
+     * Tries to locate the file represented by this LinkedFile in the given list of directories.
+     *
+     * If the link is empty or invalid, returns Optional.empty().
+     * Otherwise, attempts to resolve the link to an absolute path using the provided directories.
+     *
+     * @param directories list of base directories to resolve the relative link against
+     * @return an Optional containing the resolved absolute path if found and exists, otherwise Optional.empty()
+     */
     public Optional<Path> findIn(List<Path> directories) {
         try {
+            // If the link is empty, we cannot find anything
             if (link.get().isEmpty()) {
-                // We do not want to match empty paths (which could be any file or none ?!)
                 return Optional.empty();
             }
 
-            Path file = Path.of(link.get());
-            if (file.isAbsolute() || directories.isEmpty()) {
-                if (Files.exists(file)) {
-                    return Optional.of(file);
-                } else {
-                    return Optional.empty();
-                }
-            } else {
-                return FileUtil.find(link.get(), directories);
-            }
+            // Try to resolve the path against the provided directories
+            return FileUtil.resolveToAbsolutePath(link.get(), directories);
         } catch (InvalidPathException ex) {
+            // If the link cannot be converted to a valid Path, return empty
             return Optional.empty();
         }
     }

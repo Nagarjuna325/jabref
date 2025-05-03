@@ -366,12 +366,38 @@ public class FileUtil {
     }
 
     /**
+     * Resolves the given path (either relative or absolute) to an absolute path,
+     * checking if the file actually exists.
+     * If the provided path is already absolute, it simply checks for its existence.
+     * If the path is relative, it tries to resolve it against the given list of directories.
+     *
+     * @param relativeOrAbsolutePath the relative or absolute path as a string
+     * @param fileDirectories list of directories to resolve relative paths against
+     * @return an Optional containing the resolved absolute path if the file exists, otherwise Optional.empty()
+     */
+    public static Optional<Path> resolveToAbsolutePath(String relativeOrAbsolutePath, List<Path> fileDirectories) {
+        Path path = Path.of(relativeOrAbsolutePath);
+        if (path.isAbsolute()) {
+            return Files.exists(path) ? Optional.of(path) : Optional.empty();
+        } else {
+            for (Path dir : fileDirectories) {
+                Path resolved = dir.resolve(path);
+                if (Files.exists(resolved)) {
+                    return Optional.of(resolved);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Finds a file inside a directory structure. Will also look for the file inside nested directories.
      *
      * @param filename      the name of the file that should be found
      * @param rootDirectory the rootDirectory that will be searched
      * @return the path to the first file that matches the defined conditions
      */
+    @SuppressWarnings("checkstyle:EmptyLineSeparator")
     public static Optional<Path> findSingleFileRecursively(String filename, Path rootDirectory) {
         try (Stream<Path> pathStream = Files.walk(rootDirectory)) {
             return pathStream
